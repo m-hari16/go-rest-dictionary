@@ -12,4 +12,5 @@ func VocabRoutes(app *fiber.App) {
 	api.Get("/vocab", controller.IndexVocab)
 	api.Get("/vocab/:word", controller.Translate)
 	api.Put("/vocab/:id", controller.UpdateVocab)
+	api.Delete("/vocab/:id", controller.DeleteVocab)
 }

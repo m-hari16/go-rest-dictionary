@@ -124,5 +124,30 @@ func UpdateVocab(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(response.ResponseBuilder{Code: http.StatusInternalServerError, Success: false, Message: "Something wrong", Data: &fiber.Map{"data": err.Error()}})
 	}
 
-	return c.Status(http.StatusOK).JSON(response.ResponseBuilder{Code: http.StatusOK, Success: true, Message: "Ok", Data: result.MatchedCount})
+	if result.MatchedCount == 0 {
+		return c.Status(http.StatusNotFound).JSON(response.ResponseBuilder{Code: http.StatusNotFound, Success: false, Message: "Data not found"})
+	}
+
+	return c.Status(http.StatusOK).JSON(response.ResponseBuilder{Code: http.StatusOK, Success: true, Message: "Data has been updated"})
+}
+
+func DeleteVocab(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	id := c.Params("id")
+	defer cancel()
+
+	objId, _ := primitive.ObjectIDFromHex(id)
+
+	result, err := vocabCollection.DeleteOne(ctx, bson.M{"id": objId})
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(response.ResponseBuilder{Code: http.StatusInternalServerError, Success: false, Message: "Something wrong", Data: err.Error()})
+	}
+
+	if result.DeletedCount < 1 {
+		return c.Status(http.StatusNotFound).JSON(response.ResponseBuilder{Code: http.StatusNotFound, Success: false, Message: "Data not found"})
+	}
+
+	return c.Status(http.StatusOK).JSON(response.ResponseBuilder{Code: http.StatusOK, Success: true, Message: "Data has been deleted"})
+
 }
