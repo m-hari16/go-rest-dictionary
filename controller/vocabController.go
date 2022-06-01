@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -46,4 +47,33 @@ func StoreVocab(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusCreated).JSON(response.ResponseBuilder{Code: http.StatusCreated, Success: true, Message: "Data has been stored", Data: result})
 
+}
+
+func IndexVocab(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	var vocab []model.Vocabularies
+	defer cancel()
+
+	result, err := vocabCollection.Find(ctx, bson.M{})
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(response.ResponseBuilder{Code: http.StatusInternalServerError, Success: false, Message: "Something wrong", Data: err.Error()})
+	}
+
+	defer result.Close(ctx)
+	for result.Next(ctx) {
+		var itemVocab model.Vocabularies
+		if err := result.Decode(&itemVocab); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(response.ResponseBuilder{Code: http.StatusInternalServerError, Success: false, Message: "Something wrong", Data: err.Error()})
+		}
+
+		vocab = append(vocab, itemVocab)
+	}
+
+	return c.Status(http.StatusOK).JSON(response.ResponseBuilder{
+		Code:    http.StatusOK,
+		Success: true,
+		Message: "Ok",
+		Data:    vocab,
+	})
 }
