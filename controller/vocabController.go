@@ -97,3 +97,32 @@ func Translate(c *fiber.Ctx) error {
 		Data:    vocab,
 	})
 }
+
+func UpdateVocab(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	id := c.Params("id")
+	var vocab model.Vocabularies
+	defer cancel()
+
+	objId, _ := primitive.ObjectIDFromHex(id)
+
+	// validate request body
+	if err := c.BodyParser(&vocab); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(response.ResponseBuilder{Code: http.StatusBadRequest, Success: false, Message: "Please Check your data input", Data: err.Error()})
+	}
+
+	// use validator library to validate required fields
+	if validationErr := validate.Struct(&vocab); validationErr != nil {
+		return c.Status(http.StatusBadRequest).JSON(response.ResponseBuilder{Code: http.StatusBadRequest, Success: false, Message: "Please Check your data input", Data: validationErr.Error()})
+	}
+
+	tmp := bson.M{"vocab_type": vocab.Vocab_Type, "en_word": vocab.En_Word, "id_word": vocab.Id_Word}
+
+	result, err := vocabCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": tmp})
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(response.ResponseBuilder{Code: http.StatusInternalServerError, Success: false, Message: "Something wrong", Data: &fiber.Map{"data": err.Error()}})
+	}
+
+	return c.Status(http.StatusOK).JSON(response.ResponseBuilder{Code: http.StatusOK, Success: true, Message: "Ok", Data: result.MatchedCount})
+}
