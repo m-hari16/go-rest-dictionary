@@ -77,3 +77,23 @@ func IndexVocab(c *fiber.Ctx) error {
 		Data:    vocab,
 	})
 }
+
+func Translate(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	word := c.Params("word")
+	var vocab model.Vocabularies
+	defer cancel()
+
+	err := vocabCollection.FindOne(ctx, bson.M{"en_word": word}).Decode(&vocab)
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(response.ResponseBuilder{Code: http.StatusInternalServerError, Success: false, Message: "Something wrong", Data: &fiber.Map{"data": err.Error()}})
+	}
+
+	return c.Status(http.StatusOK).JSON(response.ResponseBuilder{
+		Code:    http.StatusOK,
+		Success: true,
+		Message: "Ok",
+		Data:    vocab,
+	})
+}
