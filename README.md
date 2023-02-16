@@ -6,4 +6,4 @@
 3. Copy-Paste .env.example then rename the file to .env
 4. Adjust your .env file (this set up will connect to your MongoDB Atlas) 
 
-[Download vocabController.go](https://raw.githubusercontent.com/m-hari16/go-rest-dictionary/main/controller/vocabController.go){: .btn .btn-purple }
+[Download vocabController.go](https://raw.githubusercontent.com/m-hari16/go-rest-dictionary/main/controller/vocabController.go?raw=true)
